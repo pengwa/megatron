@@ -19,7 +19,7 @@ mkdir -p "$(dirname "$CHECKPOINT_PATH")"
 mkdir -p "$(dirname "$TENSORBOARD_LOGS_PATH")"
 
 # Distributed training setup
-GPUS_PER_NODE=8
+GPUS_PER_NODE=2
 NUM_NODES=1
 MASTER_ADDR=${MASTER_ADDR:-localhost}
 MASTER_PORT=${MASTER_PORT:-6000}
@@ -35,7 +35,7 @@ CP_SIZE=1
 PP_SIZE=1     
 MICRO_BATCH_SIZE=1
 GLOBAL_BATCH_SIZE=128
-NUM_LAYERS=32  
+NUM_LAYERS=2  
 DTYPE="fp8"
 SEQ_LENGTH=8192
 MAX_POSITION_EMBEDDINGS=8192
@@ -79,9 +79,9 @@ MODEL_ARGS=(
 TRAINING_ARGS=(
     --micro-batch-size $MICRO_BATCH_SIZE
     --global-batch-size $GLOBAL_BATCH_SIZE
-    --train-samples 1953125000
-    --lr-decay-samples 1949218748
-    --lr-warmup-samples 3906252
+    --train-samples 20480
+    --lr-decay-samples 10240
+    --lr-warmup-samples 4096
     --lr 0.00015
     --min-lr 0.00001
     --decoupled-lr 5.0e-4      # Specific to decoupled AdamW, ensure optimizer is compatible

@@ -1,4 +1,4 @@
-#!/bin/bash
+g!/bin/bash
 
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 
@@ -67,7 +67,7 @@ if [ -z ${MLM_EVAL_ARGS} ]; then
         --log-interval 100 \
     "
 fi
-
+unset CUDA_DEVICE_MAX_CONNECTIONS
 ${LAUNCH_SCRIPT} ${SCRIPT_DIR}/finetune.py \
     ${MODEL_ARGS} \
     --tensor-model-parallel-size ${TP} \
@@ -75,11 +75,16 @@ ${LAUNCH_SCRIPT} ${SCRIPT_DIR}/finetune.py \
     --expert-model-parallel-size ${EP} \
     --pipeline-model-parallel-size ${PP} \
     --tokenizer-model ${TOKENIZER_MODEL} \
-    --load ${MLM_MODEL_CKPT} \
-    --save ${MLM_MODEL_SAVE} \
+    --use-megatron-fsdp \
+  --data-parallel-sharding-strategy "optim_grads_params" \
+  --no-gradient-accumulation-fusion \
+  --ckpt-format "fsdp_dtensor" \
     ${MLM_DATA_ARGS} \
     ${MLM_OPTIM_ARGS} \
     ${MLM_TRAIN_ARGS} \
     ${MLM_EVAL_ARGS} \
     ${MLM_RESUME_ARGS} \
-    ${MLM_DEFAULT_ARGS} ${MLM_EXTRA_ARGS}
+    ${MLM_DEFAULT_ARGS} ${MLM_EXTRA_ARGS} 
+
+
+
