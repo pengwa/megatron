@@ -1,4 +1,4 @@
-#!/bin/bash
+g!/bin/bash
 
 
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
@@ -88,7 +88,7 @@ unset CUDA_DEVICE_MAX_CONNECTIONS
 
 
 GPUS_PER_NODE=2
-NUM_NODES=2
+NUM_NODES=${NUM_NODES:-1}
 
 
 
