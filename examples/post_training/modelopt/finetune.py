@@ -391,7 +391,16 @@ def get_batch(data_iterator):
     base model are loaded for offline speculative model training."""
     # TODO: this is pretty hacky, find a better way
     if (not mpu.is_pipeline_first_stage()) and (not mpu.is_pipeline_last_stage()):
-        return None, None, None, None, None
+        batch = {
+            "tokens": None,
+            "labels": None,
+            "loss_mask": None,
+            "attention_mask": None,
+            "position_ids": None,
+        }
+
+        return batch
+        #return None, None, None, None, None
 
     args = get_args()
 
@@ -550,6 +559,7 @@ def forward_step(data_iterator, model: GPTModel):
         output_tensor = model(tokens, position_ids, attention_mask, labels=labels)
 
     return output_tensor, partial(loss_func, loss_mask, model)
+
 
 
 if __name__ == "__main__":

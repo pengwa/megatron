@@ -48,7 +48,6 @@ if [ -z ${MLM_TRAIN_ARGS} ]; then
 fi
 
 
-
 if [ -z ${MLM_OPTIM_ARGS} ]; then
     MLM_OPTIM_ARGS=" \
         --lr 5.0e-5 \
@@ -73,9 +72,23 @@ if [ -z ${MLM_EVAL_ARGS} ]; then
 fi
 unset CUDA_DEVICE_MAX_CONNECTIONS
 
+
+ export NCCL_IB_DISABLE=1 
+  export NCCL_SOCKET_IFNAME=eth0 
+  export NCCL_NET_PLUGIN=none 
+  export NCCL_IBEXT_DISABLE=1 
+  export NCCL_SHARP_DISABLE=1 
+  export NCCL_P2P_DIRECT_DISABLE=1 
+  export NCCL_P2P_DISABLE=1 
+  export NCCL_SHM_DISABLE=1 
+  export NCCL_NET_GDR_LEVEL=0 
+  export NCCL_DEBUG=WARN 
+  export NCCL_DEBUG_SUBSYS=ALL
+
+
+
 GPUS_PER_NODE=2
-NUM_NODES=1
-DP=2
+NUM_NODES=2
 
 
 
@@ -86,7 +99,7 @@ WORLD_SIZE=$(($GPUS_PER_NODE*$NUM_NODES))
 
 #     --nproc_per_node $GPUS_PER_NODE
 DISTRIBUTED_ARGS=(
-    --nproc_per_node=$((ETP * EP * PP * DP))
+    --nproc_per_node=$GPUS_PER_NODE
     --nnodes $NUM_NODES
     --node_rank $NODE_RANK
     --master_addr $MASTER_ADDR
@@ -96,6 +109,9 @@ DISTRIBUTED_ARGS=(
 
 
 # ${LAUNCH_SCRIPT} 
+#    --use-megatron-fsdp \
+#  --data-parallel-sharding-strategy "optim_grads_params" \
+#  --ckpt-format "fsdp_dtensor" \
 
 torchrun ${DISTRIBUTED_ARGS[@]} \
  ${SCRIPT_DIR}/finetune.py \
@@ -105,10 +121,7 @@ torchrun ${DISTRIBUTED_ARGS[@]} \
     --expert-model-parallel-size ${EP} \
     --pipeline-model-parallel-size ${PP} \
     --tokenizer-model ${TOKENIZER_MODEL} \
-    --use-megatron-fsdp \
-  --data-parallel-sharding-strategy "optim_grads_params" \
-  --no-gradient-accumulation-fusion \
-  --ckpt-format "fsdp_dtensor" \
+ --no-gradient-accumulation-fusion \
     ${MLM_DATA_ARGS} \
     ${MLM_OPTIM_ARGS} \
     ${MLM_TRAIN_ARGS} \
