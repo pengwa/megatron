@@ -7,6 +7,7 @@ else
     TOKENIZER_MODEL=${HF_MODEL_CKPT}
 fi
 
+
 MODEL_ARGS=" \
     --save-interval 100000 \
     --micro-batch-size 1 \
@@ -43,3 +44,7 @@ MODEL_ARGS=" \
     --no-bias-swiglu-fusion \
     --sequence-parallel \
 "
+
+
+
+
