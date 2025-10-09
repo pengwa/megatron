@@ -7,6 +7,8 @@ else
     TOKENIZER_MODEL=${HF_MODEL_CKPT}
 fi
 
+MAX_LENGTH=${MAX_LENGTH:-20000}
+
 MODEL_ARGS=" \
     --save-interval 100000 \
     --micro-batch-size 1 \
@@ -33,7 +35,7 @@ MODEL_ARGS=" \
     --moe-aux-loss-coeff 1e-3 \
     --moe-token-dispatcher-type alltoall \
     --moe-router-load-balancing-type aux_loss \
-    --seq-length 20000 \
+    --seq-length ${MAX_LENGTH} \
     --max-position-embeddings 262144 \
     --tokenizer-type HuggingFaceTokenizer \
     --make-vocab-size-divisible-by 1187 \
