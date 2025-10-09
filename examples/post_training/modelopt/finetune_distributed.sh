@@ -70,8 +70,39 @@ if [ -z ${MLM_EVAL_ARGS} ]; then
         --log-interval 1 \
     "
 fi
-unset CUDA_DEVICE_MAX_CONNECTIONS
 
+# AssertionError: Using tensor model parallelism $TP or context parallelism  require setting the environment variable CUDA_DEVICE_MAX_CONNECTIONS to 1
+if [ -n "$TP" ] || [ -n "$CP" ]; then
+    export CUDA_DEVICE_MAX_CONNECTIONS=1
+
+    # For TP: Split individual model layers across GPUs:
+    # ```bash
+    # --tensor-model-parallel-size 4  # 4-way tensor parallelism
+    # --sequence-parallel             # Enable sequence parallelism (recommended with TP)
+    # ``` 
+    # For CP: Split long sequences across GPUs for handling long contexts:
+    # ```bash
+    # --context-parallel-size 2                    # 2-way context parallelism
+    # --cp-comm-type p2p                          # Communication: p2p, a2a, allgather, a2a+p2p
+    # --hierarchical-context-parallel-sizes 2 4   # Hierarchical context parallelism
+    # ```
+
+    if [ -n "$TP" ]; then
+        printf "${MLM_INFO} Tensor model parallelism is enabled, CUDA_DEVICE_MAX_CONNECTIONS is set to ${PURPLE}1${WHITE}.\n"
+        MLM_EXTRA_ARGS+=" --sequence-parallel "
+    fi
+
+    if [ -n "$CP" ]; then
+        printf "${MLM_INFO} Context parallelism is enabled, CUDA_DEVICE_MAX_CONNECTIONS is set to ${PURPLE}1${WHITE}.\n"
+        MLM_EXTRA_ARGS+=" --context-parallel-size ${CP} --sequence-parallel "
+        # if [ -n "$HCP" ]; then
+        #     MLM_EXTRA_ARGS+=" --hierarchical-context-parallel-sizes ${HCP} "
+        # fi
+    fi
+
+else
+    unset CUDA_DEVICE_MAX_CONNECTIONS
+fi
 
  export NCCL_IB_DISABLE=1 
   export NCCL_SOCKET_IFNAME=eth0 
@@ -121,7 +152,7 @@ torchrun ${DISTRIBUTED_ARGS[@]} \
     --expert-model-parallel-size ${EP} \
     --pipeline-model-parallel-size ${PP} \
     --tokenizer-model ${TOKENIZER_MODEL} \
- --no-gradient-accumulation-fusion \
+    --no-gradient-accumulation-fusion \
     ${MLM_DATA_ARGS} \
     ${MLM_OPTIM_ARGS} \
     ${MLM_TRAIN_ARGS} \
