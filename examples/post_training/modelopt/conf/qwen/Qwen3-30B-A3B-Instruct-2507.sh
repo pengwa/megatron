@@ -44,4 +44,6 @@ MODEL_ARGS=" \
     --rotary-base 10000000 \
     --no-bias-swiglu-fusion \
     --sequence-parallel \
+    --kv-lora-rank 128 \
+    --q-lora-rank 128 \
 "
