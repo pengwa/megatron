@@ -47,4 +47,5 @@ MODEL_ARGS=" \
     --kv-lora-rank 128 \
     --q-lora-rank 128 \
     --attention-backend flash \
+    --use-flash-attn \
 "
