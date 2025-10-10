@@ -46,4 +46,5 @@ MODEL_ARGS=" \
     --sequence-parallel \
     --kv-lora-rank 128 \
     --q-lora-rank 128 \
+    --attention-backend flash \
 "
