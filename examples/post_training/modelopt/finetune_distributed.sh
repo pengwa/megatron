@@ -167,10 +167,6 @@ torchrun ${DISTRIBUTED_ARGS[@]} \
     --pipeline-model-parallel-layout ${PPL} \
     --tokenizer-model ${TOKENIZER_MODEL} \
     --no-gradient-accumulation-fusion \
-    --recompute-granularity "full" \
-    --recompute-method "block" \
-    --recompute-num-layers 3 \
-    --distribute-saved-activations \
     --account-for-embedding-in-pipeline-split \
     --account-for-loss-in-pipeline-split \
     ${MLM_DATA_ARGS} \
@@ -182,3 +178,7 @@ torchrun ${DISTRIBUTED_ARGS[@]} \
 
 
 
+    # --recompute-granularity "full" \
+    # --recompute-method "block" \
+    # --recompute-num-layers 3 \
+    # --distribute-saved-activations \
