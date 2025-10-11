@@ -35,6 +35,7 @@ if [ -z ${MLM_DATA_ARGS} ]; then
         --lr-warmup-samples 0 \
         --split 100,0,0 \
         --train-data-path $INPUT_DATASET/train.jsonl \
+        --valid-data-path $INPUT_DATASET/test.jsonl \
         --test-data-path $INPUT_DATASET/test.jsonl \
     "
 fi
