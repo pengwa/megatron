@@ -34,7 +34,9 @@ if [ -z ${MLM_DATA_ARGS} ]; then
         --lr-decay-samples 32 \
         --lr-warmup-samples 0 \
         --split 100,0,0 \
-        --finetune-hf-dataset Magpie-Align/Magpie-Llama-3.1-Pro-MT-300K-Filtered \
+        --train-data-path $INPUT_DATASET/train.jsonl \
+        --valid-data-path $INPUT_DATASET/test.jsonl \
+        --test-data-path $INPUT_DATASET/test.jsonl \
     "
 fi
 

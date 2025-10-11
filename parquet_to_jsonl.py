@@ -6,7 +6,7 @@ Examples:
 
 # Local files (train & test)
 python parquet_to_jsonl.py \
-  --parquet ~/datasets/sft_data/train.parquet ~/datasets/sft_data/test.parquet \
+  --parquet train:~/datasets/sft_data/train.parquet test:~/datasets/sft_data/test.parquet \
   --text-column messages \
   --out-dir ~/datasets/megatron_sft_data
 
@@ -39,10 +39,12 @@ def write_split(ds, out_jsonl, text_col, keep_newlines=False):
             txt = ex[text_col]
             if txt is None:
                 continue
-            if not keep_newlines:
-                # optional: normalize hard line breaks if your data is very ragged
-                txt = str(txt).replace("\r\n", "\n")
-            f.write(json.dumps({"text": txt}, ensure_ascii=False) + "\n")
+            # if not keep_newlines:
+            #     # optional: normalize hard line breaks if your data is very ragged
+            #     txt = str(txt).replace("\r\n", "\n")
+            # f.write(json.dumps({"text": txt}, ensure_ascii=False) + "\n")
+            f.write(json.dumps({"messages": txt}, ensure_ascii=False) + "\n")
+            # f.write(txt + "\n")
     print(f"Wrote {out_jsonl}")
 
 def main():
