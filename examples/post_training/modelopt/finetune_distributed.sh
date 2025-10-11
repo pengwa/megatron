@@ -28,9 +28,10 @@ if [ -z ${MLM_MODEL_SAVE} ]; then
     printf "${MLM_WARNING} Variable ${PURPLE}MLM_MODEL_SAVE${WHITE} is not set (default: ${MLM_MODEL_CKPT})!\n"
 fi
 
+# 4158 *4 = 16632
 if [ -z ${MLM_DATA_ARGS} ]; then
     MLM_DATA_ARGS=" \
-        --train-samples 64 \
+        --train-samples 16632 \
         --lr-decay-samples 32 \
         --lr-warmup-samples 0 \
         --split 100,0,0 \
