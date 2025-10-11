@@ -1276,6 +1276,8 @@ def core_transformer_config_from_args(args, config_class=None):
 
     # pengwa: recompuete all
     kw_args["recompute_granularity"] = "full"
+    kw_args["recompute_method"] = "block"
+    kw_args["recompute_num_layers"] = 1
     kw_args["distribute_saved_activations"] = True
 
     # Return config.
