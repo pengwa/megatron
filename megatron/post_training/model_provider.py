@@ -182,7 +182,7 @@ def model_provider(pre_process=True, post_process=True, parallel_output=True) ->
                 local_core_attention=args.export_force_local_attention,
                 remap_te_layernorm=args.export_te_mcore_model,
                 real_quant_cfg=args.export_real_quant_cfg,
-                use_arbitrary_attention_mask=True,
+                use_arbitrary_attention_mask=False, # pengwa: use causal to enable falsh attention
             )
 
         model_kwargs = {
