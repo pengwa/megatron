@@ -45,6 +45,8 @@ MODEL_ARGS=" \
     --q-lora-rank 128 \
     --attention-backend flash \
     --use-flash-attn \
+    --recompute-activations \
+    --recompute-granularity full \
 "
 #     --no-masked-softmax-fusion \
 #     --no-rope-fusion \
