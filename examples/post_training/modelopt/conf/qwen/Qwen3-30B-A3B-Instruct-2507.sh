@@ -43,12 +43,12 @@ MODEL_ARGS=" \
     --sequence-parallel \
     --attention-backend flash \
     --use-flash-attn \
-    --recompute-activations \
+
 "
 #     --moe-layer-recompute \
 #     --no-masked-softmax-fusion \
 #     --no-rope-fusion \
 #     --no-bias-swiglu-fusion \
-
+#     --recompute-activations \
     # --kv-lora-rank 128 \
     # --q-lora-rank 128 \
