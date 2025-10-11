@@ -1274,6 +1274,9 @@ def core_transformer_config_from_args(args, config_class=None):
         kw_args['use_kitchen'] = True
         kw_args['quant_recipe'] = kitchen_quantization_recipe_config(args.kitchen_recipe_number)
 
+    # pengwa: recompuete all
+    kw_args["recompute_granularity"] = "full"
+    kw_args["distribute_saved_activations"] = True
 
     # Return config.
     return config_class(**kw_args)
