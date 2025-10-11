@@ -15,7 +15,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.
 import datasets
 import torch
 import transformers
-
+from megatron.core.tokenizers.text.utils.build_tokenizer import build_tokenizer
 from megatron.core import mpu, tensor_parallel,parallel_state
 from megatron.core.enums import ModelType
 from megatron.core.models.gpt import GPTModel
@@ -342,7 +342,7 @@ class SFTDataset(torch.utils.data.Dataset):
 
 
 def core_gpt_dataset_config_from_args(args):
-    tokenizer = get_tokenizer()
+    tokenizer = build_tokenizer(args)
     # if args.legacy_tokenizer:
     #     tokenizer = get_tokenizer()
     # else:
