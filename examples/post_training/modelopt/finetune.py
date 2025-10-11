@@ -5,7 +5,7 @@ import itertools
 import os
 import sys
 from functools import partial
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import json
 import jsonlines
@@ -16,9 +16,10 @@ import datasets
 import torch
 import transformers
 
-from megatron.core import mpu, tensor_parallel
+from megatron.core import mpu, tensor_parallel,parallel_state
 from megatron.core.enums import ModelType
 from megatron.core.models.gpt import GPTModel
+from megatron.core.datasets.gpt_dataset import GPTDatasetConfig
 from megatron.post_training.arguments import add_modelopt_args
 from megatron.post_training.model_provider import model_provider
 from megatron.post_training.non_loss_data_func import report_draft_acceptance_length
@@ -29,8 +30,11 @@ from megatron.training.utils import (
     get_ltor_masks_and_position_ids,
     print_rank_0,
     unwrap_model,
+    get_blend_and_blend_per_split,
+    get_blend_and_blend_per_split,
+    is_first_or_last_pipeline_stage,
 )
-
+from megatron.core.datasets.blended_megatron_dataset_builder import BlendedMegatronDatasetBuilder
 REMOVE_THINK_CHAT_TEMPLATE = (
     "{% if '</think>' in content %}{% set content = content.split('</think>')[-1] %}{% endif %}"
 )
@@ -336,7 +340,43 @@ class SFTDataset(torch.utils.data.Dataset):
         return processed_data
 
 
-def train_valid_test_sft_datasets_provider(train_val_test_num_samples):
+def core_gpt_dataset_config_from_args(args):
+    tokenizer = get_tokenizer()
+    # if args.legacy_tokenizer:
+    #     tokenizer = get_tokenizer()
+    # else:
+    #     tokenizer = build_tokenizer(args)
+
+    # Sometimes --data-path is too long, instead we parse it from a file.
+    blend: Optional[Tuple[List[str], Optional[List[float]]]]
+    blend_per_split: Optional[List[Optional[Tuple[List[str], Optional[List[float]]]]]]
+    blend, blend_per_split = get_blend_and_blend_per_split(args)
+
+    return GPTDatasetConfig(
+        random_seed=args.seed,
+        sequence_length=args.seq_length,
+        blend=blend,
+        blend_per_split=blend_per_split,
+        split=args.split,
+        multiple_validation_sets=args.multiple_validation_sets,
+        full_validation=args.full_validation,
+        num_dataset_builder_threads=args.num_dataset_builder_threads,
+        path_to_cache=args.data_cache_path,
+        mmap_bin_files=args.mmap_bin_files,
+        tokenizer=tokenizer,
+        reset_position_ids=args.reset_position_ids,
+        reset_attention_mask=args.reset_attention_mask,
+        eod_mask_loss=args.eod_mask_loss,
+        create_attention_mask=args.create_attention_mask_in_dataloader,
+        object_storage_cache_path=args.object_storage_cache_path,
+        mid_level_dataset_surplus=args.mid_level_dataset_surplus,
+    )
+
+def is_dataset_built_on_rank(vp_stage=None):
+    return is_first_or_last_pipeline_stage(vp_stage) and parallel_state.get_tensor_model_parallel_rank() == 0
+
+
+def train_valid_test_sft_datasets_provider(train_val_test_num_samples, vp_stage=None):
     """Build the train test and validation datasets.
 
     Args:
@@ -345,43 +385,66 @@ def train_valid_test_sft_datasets_provider(train_val_test_num_samples):
     """
     print_rank_0("> building train, validation, and test SFT datasets ...")
     args = get_args()
-    tokenizer = get_tokenizer()
+    # tokenizer = get_tokenizer()
 
-    if not isinstance(tokenizer._tokenizer, transformers.PreTrainedTokenizerBase):
-        raise ValueError("SFTDataset only supports transformers.PreTrainedTokenizerBase!")
+    args = get_args()
 
-    if args.micro_batch_size > 1:
-        raise ValueError("SFTDataloader only supports micro_batch_size=1.")
+    config = core_gpt_dataset_config_from_args(args)
+    dataset_type = SFTDataset
+    # if args.sft:
+    #     dataset_type = SFTDataset
+    # else:
+    #     if args.mock_data:
+    #         dataset_type = MockGPTDataset
+    #     else:
+    #         dataset_type = GPTDataset
 
-    if args.export_offline_model:
-        train_ds = OfflineDataset(os.path.join(args.offline_distillation_data, "train"), train_val_test_num_samples[0])
-        valid_ds = OfflineDataset(os.path.join(args.offline_distillation_data, "valid"), train_val_test_num_samples[1])
-        test_ds = OfflineDataset(os.path.join(args.offline_distillation_data, "test"), train_val_test_num_samples[2])
+    print_rank_0("> building train, validation, and test datasets for GPT ...")
 
-        print_rank_0("> finished creating offline SFT datasets ...")
-    else:
-        kwargs = {
-            "tokenizer": tokenizer._tokenizer,
-            "seq_length": args.seq_length,
-            # Optional kwargs
-            "hf_dataset": args.finetune_hf_dataset,
-            "num_shards": mpu.get_expert_data_parallel_world_size(),
-            "shard_index": mpu.get_expert_data_parallel_rank(),
-        }
+    train_ds, valid_ds, test_ds = BlendedMegatronDatasetBuilder(
+        dataset_type, train_val_test_num_samples, partial(is_dataset_built_on_rank, vp_stage=vp_stage), config
+    ).build()
 
-        data_path = [
-            args.train_data_path[0] if args.train_data_path else None,
-            args.valid_data_path[0] if args.valid_data_path else None,
-            args.test_data_path[0] if args.test_data_path else None,
-        ]
-
-        train_ds = SFTDataset(train_val_test_num_samples[0], data_path[0], **kwargs)
-        valid_ds = SFTDataset(train_val_test_num_samples[1], data_path[1], **kwargs)
-        test_ds = SFTDataset(train_val_test_num_samples[2], data_path[2], **kwargs)
-
-        print_rank_0("> finished creating SFT datasets ...")
+    print_rank_0("> finished creating GPT datasets ...")
 
     return train_ds, valid_ds, test_ds
+
+
+    # if not isinstance(tokenizer._tokenizer, transformers.PreTrainedTokenizerBase):
+    #     raise ValueError("SFTDataset only supports transformers.PreTrainedTokenizerBase!")
+
+    # if args.micro_batch_size > 1:
+    #     raise ValueError("SFTDataloader only supports micro_batch_size=1.")
+
+    # if args.export_offline_model:
+    #     train_ds = OfflineDataset(os.path.join(args.offline_distillation_data, "train"), train_val_test_num_samples[0])
+    #     valid_ds = OfflineDataset(os.path.join(args.offline_distillation_data, "valid"), train_val_test_num_samples[1])
+    #     test_ds = OfflineDataset(os.path.join(args.offline_distillation_data, "test"), train_val_test_num_samples[2])
+
+    #     print_rank_0("> finished creating offline SFT datasets ...")
+    # else:
+    #     kwargs = {
+    #         "tokenizer": tokenizer._tokenizer,
+    #         "seq_length": args.seq_length,
+    #         # Optional kwargs
+    #         "hf_dataset": args.finetune_hf_dataset,
+    #         "num_shards": mpu.get_expert_data_parallel_world_size(),
+    #         "shard_index": mpu.get_expert_data_parallel_rank(),
+    #     }
+
+    #     data_path = [
+    #         args.train_data_path[0] if args.train_data_path else None,
+    #         args.valid_data_path[0] if args.valid_data_path else None,
+    #         args.test_data_path[0] if args.test_data_path else None,
+    #     ]
+
+    #     train_ds = SFTDataset(train_val_test_num_samples[0], data_path[0], **kwargs)
+    #     valid_ds = SFTDataset(train_val_test_num_samples[1], data_path[1], **kwargs)
+    #     test_ds = SFTDataset(train_val_test_num_samples[2], data_path[2], **kwargs)
+
+    #     print_rank_0("> finished creating SFT datasets ...")
+
+    # return train_ds, valid_ds, test_ds
 
 
 def get_batch(data_iterator):
