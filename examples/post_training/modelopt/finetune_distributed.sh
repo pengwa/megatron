@@ -34,13 +34,13 @@ if [ -z ${MLM_DATA_ARGS} ]; then
         --lr-decay-samples 32 \
         --lr-warmup-samples 0 \
         --split 100,0,0 \
-        --train-data-path $INPUT_DATASET/train.jsonl \
-        --valid-data-path $INPUT_DATASET/test.jsonl \
-        --test-data-path $INPUT_DATASET/test.jsonl \
+        --finetune-hf-dataset Magpie-Align/Magpie-Llama-3.1-Pro-MT-300K-Filtered \
     "
 fi
 
-
+        # --train-data-path $INPUT_DATASET/train.jsonl \
+        # --valid-data-path $INPUT_DATASET/test.jsonl \
+        # --test-data-path $INPUT_DATASET/test.jsonl \
 # --finetune-hf-dataset Magpie-Align/Magpie-Llama-3.1-Pro-MT-300K-Filtered \
 #~/datasets/megatron_sft_data/megatron_corpus/
 if [ -z ${MLM_TRAIN_ARGS} ]; then
