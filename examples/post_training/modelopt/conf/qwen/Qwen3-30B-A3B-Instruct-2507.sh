@@ -13,11 +13,9 @@ MODEL_ARGS=" \
     --save-interval 100000 \
     --micro-batch-size 1 \
     --bf16 \
-    --no-masked-softmax-fusion \
     --disable-bias-linear \
     --untie-embeddings-and-output-weights \
     --position-embedding-type rope \
-    --no-rope-fusion \
     --normalization RMSNorm \
     --swiglu \
     --num-layers 48 \
@@ -42,10 +40,12 @@ MODEL_ARGS=" \
     --use-mcore-models \
     --rotary-percent 1.0 \
     --rotary-base 10000000 \
-    --no-bias-swiglu-fusion \
     --sequence-parallel \
     --kv-lora-rank 128 \
     --q-lora-rank 128 \
-    --attention-backend fused \
+    --attention-backend flash \
     --use-flash-attn \
 "
+#     --no-masked-softmax-fusion \
+#     --no-rope-fusion \
+#     --no-bias-swiglu-fusion \
