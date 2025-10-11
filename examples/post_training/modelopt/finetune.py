@@ -35,6 +35,7 @@ from megatron.training.utils import (
     is_first_or_last_pipeline_stage,
 )
 from megatron.core.datasets.blended_megatron_dataset_builder import BlendedMegatronDatasetBuilder
+from megatron.training.datasets.sft_dataset import SFTDataset as ESFTDataset
 REMOVE_THINK_CHAT_TEMPLATE = (
     "{% if '</think>' in content %}{% set content = content.split('</think>')[-1] %}{% endif %}"
 )
@@ -390,7 +391,7 @@ def train_valid_test_sft_datasets_provider(train_val_test_num_samples, vp_stage=
     args = get_args()
 
     config = core_gpt_dataset_config_from_args(args)
-    dataset_type = SFTDataset
+    dataset_type = ESFTDataset
     # if args.sft:
     #     dataset_type = SFTDataset
     # else:
