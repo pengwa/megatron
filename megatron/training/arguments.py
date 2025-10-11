@@ -1279,6 +1279,8 @@ def core_transformer_config_from_args(args, config_class=None):
     kw_args["recompute_method"] = "block"
     kw_args["recompute_num_layers"] = 3
     kw_args["distribute_saved_activations"] = True
+    kw_args["account_for_embedding_in_pipeline_split"] = True
+    kw_args["account_for_loss_in_pipeline_split"] = True
 
     # Return config.
     return config_class(**kw_args)
