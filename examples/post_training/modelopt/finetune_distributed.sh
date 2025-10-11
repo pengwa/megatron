@@ -153,6 +153,10 @@ DISTRIBUTED_ARGS=(
 #  --data-parallel-sharding-strategy "optim_grads_params" \
 #  --ckpt-format "fsdp_dtensor" \
 
+
+# --pipeline-model-parallel-size 16
+# --pipeline-model-parallel-layout "Et*3|(tt|)*29,m|L"
+
 torchrun ${DISTRIBUTED_ARGS[@]} \
  ${SCRIPT_DIR}/finetune.py \
     ${MODEL_ARGS} \
@@ -160,6 +164,7 @@ torchrun ${DISTRIBUTED_ARGS[@]} \
     --expert-tensor-parallel-size ${ETP} \
     --expert-model-parallel-size ${EP} \
     --pipeline-model-parallel-size ${PP} \
+    --pipeline-model-parallel-layout ${PPL} \
     --tokenizer-model ${TOKENIZER_MODEL} \
     --no-gradient-accumulation-fusion \
     ${MLM_DATA_ARGS} \
