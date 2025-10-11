@@ -41,8 +41,6 @@ MODEL_ARGS=" \
     --rotary-percent 1.0 \
     --rotary-base 10000000 \
     --sequence-parallel \
-    --kv-lora-rank 128 \
-    --q-lora-rank 128 \
     --attention-backend flash \
     --use-flash-attn \
     --recompute-activations \
@@ -51,3 +49,6 @@ MODEL_ARGS=" \
 #     --no-masked-softmax-fusion \
 #     --no-rope-fusion \
 #     --no-bias-swiglu-fusion \
+
+    # --kv-lora-rank 128 \
+    # --q-lora-rank 128 \
