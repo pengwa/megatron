@@ -4,8 +4,8 @@
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 
 
-INPUT_DATASET=$1
-OUTPUT_DATASET=$2
+INPUT_DATASET=$2
+OUTPUT_DATASET=$3
 
 # Common arguments and base model specific arguments
 source "${SCRIPT_DIR}/conf/arguments.sh"
