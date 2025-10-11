@@ -3,6 +3,10 @@
 
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 
+
+INPUT_DATASET=$1
+OUTPUT_DATASET=$2
+
 # Common arguments and base model specific arguments
 source "${SCRIPT_DIR}/conf/arguments.sh"
 
@@ -30,10 +34,14 @@ if [ -z ${MLM_DATA_ARGS} ]; then
         --lr-decay-samples 32 \
         --lr-warmup-samples 0 \
         --split 100,0,0 \
-        --finetune-hf-dataset Magpie-Align/Magpie-Llama-3.1-Pro-MT-300K-Filtered \
+        --train-data-path $INPUT_DATASET/train.jsonl \
+        --test-data-path $INPUT_DATASET/test.jsonl \
     "
 fi
 
+
+# --finetune-hf-dataset Magpie-Align/Magpie-Llama-3.1-Pro-MT-300K-Filtered \
+#~/datasets/megatron_sft_data/megatron_corpus/
 if [ -z ${MLM_TRAIN_ARGS} ]; then
     MLM_TRAIN_ARGS=" \
         --no-gradient-accumulation-fusion \
@@ -58,7 +66,7 @@ if [ -z ${MLM_OPTIM_ARGS} ]; then
         --adam-beta1 0.9 \
         --adam-beta2 0.95 \
         --init-method-std 0.010 \
-	--use-distributed-optimizer \
+	    --use-distributed-optimizer \
     "
 fi
 
