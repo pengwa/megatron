@@ -46,7 +46,7 @@ MODEL_ARGS=" \
     --attention-backend flash \
     --use-flash-attn \
     --recompute-activations \
-    --recompute-granularity full \
+    --moe-layer-recompute \
 "
 #     --no-masked-softmax-fusion \
 #     --no-rope-fusion \
