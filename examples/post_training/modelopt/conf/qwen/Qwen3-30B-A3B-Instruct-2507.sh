@@ -46,8 +46,8 @@ MODEL_ARGS=" \
     --attention-backend flash \
     --use-flash-attn \
     --recompute-activations \
-    --moe-layer-recompute \
 "
+#     --moe-layer-recompute \
 #     --no-masked-softmax-fusion \
 #     --no-rope-fusion \
 #     --no-bias-swiglu-fusion \

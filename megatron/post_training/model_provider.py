@@ -161,6 +161,8 @@ def model_provider(pre_process=True, post_process=True, parallel_output=True) ->
     # Llama-4 Scout/Maverick support
     config.qk_l2_norm = args.export_qk_l2_norm 
     config.moe_apply_probs_on_input = args.export_moe_apply_probs_on_input 
+    
+    print_rank_0("Model config: {}".format(config))
 
     if args.export_model_type == "GPTModel":
         if args.export_offline_model:
