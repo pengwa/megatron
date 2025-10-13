@@ -470,7 +470,7 @@ def get_batch(data_iterator, vp_stage=None):
     # slice batch along sequence dimension for context parallelism
     batch = get_batch_on_this_cp_rank(batch)
 
-    return batch.values()
+    return batch
 
 
 # def get_batch(data_iterator):
