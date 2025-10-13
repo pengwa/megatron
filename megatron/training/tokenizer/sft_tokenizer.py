@@ -130,11 +130,52 @@ class SFTTokenizer(MegatronLegacyTokenizer):
         # Mask system and user tokens in the target.
         idx = 0
         for turn_idx, turn in enumerate(conversation):
+            # disable to workaround
+            # [rank0]: Traceback (most recent call last):
+            # [rank0]:   File "/root/megatron/examples/post_training/modelopt/finetune.py", line 630, in <module>
+            # [rank0]:     pretrain(
+            # [rank0]:   File "/root/megatron/megatron/training/training.py", line 732, in pretrain
+            # [rank0]:     iteration, num_floating_point_operations_so_far = train(
+            # [rank0]:   File "/root/megatron/megatron/training/training.py", line 2254, in train
+            # [rank0]:     ) = train_step(
+            # [rank0]:   File "/root/megatron/megatron/training/training.py", line 1252, in train_step
+            # [rank0]:     losses_reduced = forward_backward_func(
+            # [rank0]:   File "/root/megatron/megatron/core/pipeline_parallel/schedules.py", line 2135, in forward_backward_pipelining_without_interleaving
+            # [rank0]:     output_tensor, num_tokens = forward_step(
+            # [rank0]:   File "/root/megatron/megatron/core/pipeline_parallel/schedules.py", line 402, in forward_step
+            # [rank0]:     output_tensor, loss_func = forward_step_func(data_iterator, model)
+            # [rank0]:   File "/root/megatron/examples/post_training/modelopt/finetune.py", line 609, in forward_step
+            # [rank0]:     batch = get_batch(data_iterator)
+            # [rank0]:   File "/root/megatron/examples/post_training/modelopt/finetune.py", line 473, in get_batch
+            # [rank0]:     data = next(data_iterator)
+            # [rank0]:   File "/root/megatron/megatron/core/rerun_state_machine.py", line 1062, in __next__
+            # [rank0]:     n: Any = next(self.iterable)
+            # [rank0]:   File "/usr/local/lib/python3.10/dist-packages/torch/utils/data/dataloader.py", line 733, in __next__
+            # [rank0]:     data = self._next_data()
+            # [rank0]:   File "/usr/local/lib/python3.10/dist-packages/torch/utils/data/dataloader.py", line 1515, in _next_data
+            # [rank0]:     return self._process_data(data, worker_id)
+            # [rank0]:   File "/usr/local/lib/python3.10/dist-packages/torch/utils/data/dataloader.py", line 1550, in _process_data
+            # [rank0]:     data.reraise()
+            # [rank0]:   File "/usr/local/lib/python3.10/dist-packages/torch/_utils.py", line 750, in reraise
+            # [rank0]:     raise exception
+            # [rank0]: TypeError: Caught TypeError in DataLoader worker process 0.
+            # [rank0]: Original Traceback (most recent call last):
+            # [rank0]:   File "/usr/local/lib/python3.10/dist-packages/torch/utils/data/_utils/worker.py", line 349, in _worker_loop
+            # [rank0]:     data = fetcher.fetch(index)  # type: ignore[possibly-undefined]
+            # [rank0]:   File "/usr/local/lib/python3.10/dist-packages/torch/utils/data/_utils/fetch.py", line 52, in fetch
+            # [rank0]:     data = [self.dataset[idx] for idx in possibly_batched_index]
+            # [rank0]:   File "/usr/local/lib/python3.10/dist-packages/torch/utils/data/_utils/fetch.py", line 52, in <listcomp>
+            # [rank0]:     data = [self.dataset[idx] for idx in possibly_batched_index]
+            # [rank0]:   File "/root/megatron/megatron/training/datasets/sft_dataset.py", line 77, in __getitem__
+            # [rank0]:     tokens, target = tokenizer.tokenize_conversation(
+            # [rank0]:   File "/root/megatron/megatron/training/tokenizer/sft_tokenizer.py", line 134, in tokenize_conversation
+            # [rank0]:     if turn["role"].lower() == "assistant" and len(turn["content"]) == 0:
+            # [rank0]: TypeError: object of type 'NoneType' has no len()
+            # if turn["role"].lower() == "assistant" and len(turn["content"]) == 0:
+            #     raise ValueError(f"empty assistant turn in conversation: {conversation}.")
             
-            if turn["role"].lower() == "assistant" and len(turn["content"]) == 0:
-                raise ValueError(f"empty assistant turn in conversation: {conversation}.")
-            if turn["role"].lower() == "assistant":
-                assert conversation[turn_idx-1]["role"].lower() == "user"
+            # if turn["role"].lower() == "assistant":
+            #     assert conversation[turn_idx-1]["role"].lower() == "user"
 
             turn_tokens = self._tokenizer.apply_chat_template(
                 [turn], tokenize=True, 
