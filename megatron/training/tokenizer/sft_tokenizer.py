@@ -90,7 +90,36 @@ class SFTTokenizer(MegatronLegacyTokenizer):
             add_generation_prompt=add_generation_prompt,
             return_assistant_token_mask=False,
             return_tensors="np",
-            chat_template=self._prompt_config.custom_chat_template,
+            # pengwa: remove the chat template
+            # chat_template=self._prompt_config.custom_chat_template,
+            # pengwa, to workaround:
+            # [rank0]: jinja2.exceptions.UndefinedError: Caught UndefinedError in DataLoader worker process 0.
+            # [rank0]: Original Traceback (most recent call last):
+            # [rank0]:   File "/usr/local/lib/python3.10/dist-packages/torch/utils/data/_utils/worker.py", line 349, in _worker_loop
+            # [rank0]:     data = fetcher.fetch(index)  # type: ignore[possibly-undefined]
+            # [rank0]:   File "/usr/local/lib/python3.10/dist-packages/torch/utils/data/_utils/fetch.py", line 52, in fetch
+            # [rank0]:     data = [self.dataset[idx] for idx in possibly_batched_index]
+            # [rank0]:   File "/usr/local/lib/python3.10/dist-packages/torch/utils/data/_utils/fetch.py", line 52, in <listcomp>
+            # [rank0]:     data = [self.dataset[idx] for idx in possibly_batched_index]
+            # [rank0]:   File "/root/megatron/megatron/training/datasets/sft_dataset.py", line 77, in __getitem__
+            # [rank0]:     tokens, target = tokenizer.tokenize_conversation(
+            # [rank0]:   File "/root/megatron/megatron/training/tokenizer/sft_tokenizer.py", line 87, in tokenize_conversation
+            # [rank0]:     tokens = self._tokenizer.apply_chat_template(
+            # [rank0]:   File "/usr/local/lib/python3.10/dist-packages/transformers/tokenization_utils_base.py", line 1641, in apply_chat_template
+            # [rank0]:     rendered_chat, generation_indices = render_jinja_template(
+            # [rank0]:   File "/usr/local/lib/python3.10/dist-packages/transformers/utils/chat_template_utils.py", line 498, in render_jinja_template
+            # [rank0]:     rendered_chat = compiled_template.render(
+            # [rank0]:   File "/usr/local/lib/python3.10/dist-packages/jinja2/environment.py", line 1295, in render
+            # [rank0]:     self.environment.handle_exception()
+            # [rank0]:   File "/usr/local/lib/python3.10/dist-packages/jinja2/environment.py", line 942, in handle_exception
+            # [rank0]:     raise rewrite_traceback_stack(source=source)
+            # [rank0]:   File "<template>", line 6, in top-level template code
+            # [rank0]:   File "/usr/local/lib/python3.10/dist-packages/jinja2/sandbox.py", line 399, in call
+            # [rank0]:     if not __self.is_safe_callable(__obj):
+            # [rank0]:   File "/usr/local/lib/python3.10/dist-packages/jinja2/sandbox.py", line 265, in is_safe_callable
+            # [rank0]:     getattr(obj, "unsafe_callable", False) or getattr(obj, "alters_data", False)
+            # [rank0]: jinja2.exceptions.UndefinedError: 'None' has no attribute 'strip'
+            continue_final_message=False, 
         )[0]
 
         if not return_target:
@@ -108,7 +137,11 @@ class SFTTokenizer(MegatronLegacyTokenizer):
                 assert conversation[turn_idx-1]["role"].lower() == "user"
 
             turn_tokens = self._tokenizer.apply_chat_template(
-                [turn], tokenize=True, chat_template=self._prompt_config.custom_chat_template
+                [turn], tokenize=True, 
+                # pengwa: remove the chat template
+                #chat_template=self._prompt_config.custom_chat_template,
+                # pegnwa:
+                continue_final_message=False, 
             )
 
             # There should be only one BOS at the very beginning.
