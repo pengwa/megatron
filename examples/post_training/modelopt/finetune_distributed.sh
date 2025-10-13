@@ -45,8 +45,6 @@ fi
 if [ -z ${MLM_TRAIN_ARGS} ]; then
     MLM_TRAIN_ARGS=" \
         --no-gradient-accumulation-fusion \
-        --reset-position-ids \
-        --reset-attention-mask \
         --eod-mask-loss \
         --micro-batch-size 1 \
         --attention-dropout 0.0 \
@@ -54,6 +52,9 @@ if [ -z ${MLM_TRAIN_ARGS} ]; then
         --no-check-for-nan-in-loss-and-grad \
     "
 fi
+
+        # --reset-position-ids \
+        # --reset-attention-mask \
 
 
 if [ -z ${MLM_OPTIM_ARGS} ]; then
