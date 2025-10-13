@@ -342,7 +342,7 @@ class SFTDataset(torch.utils.data.Dataset):
 
 
 def core_gpt_dataset_config_from_args(args):
-    tokenizer = build_tokenizer(args)
+    tokenizer = get_tokenizer()
     # if args.legacy_tokenizer:
     #     tokenizer = get_tokenizer()
     # else:
