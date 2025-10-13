@@ -35,7 +35,8 @@ MODEL_ARGS=" \
     --moe-router-load-balancing-type aux_loss \
     --seq-length ${MAX_LENGTH} \
     --max-position-embeddings 262144 \
-    --tokenizer-type HuggingFaceTokenizer \
+    --tokenizer-type SFTTokenizer \
+    --sft-tokenizer-prompt-format "nemotron-nano-v2" \
     --make-vocab-size-divisible-by 1187 \
     --use-mcore-models \
     --rotary-percent 1.0 \
@@ -45,6 +46,11 @@ MODEL_ARGS=" \
     --use-flash-attn \
 
 "
+
+# pengwa: revisist --sft-tokenizer-prompt-format "nemotron-nano-v2" \
+
+    #         args.sft_tokenizer_prompt_format, 
+#    --tokenizer-type HuggingFaceTokenizer \
 #     --moe-layer-recompute \
 #     --no-masked-softmax-fusion \
 #     --no-rope-fusion \
