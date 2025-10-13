@@ -50,6 +50,7 @@ if [ -z ${MLM_TRAIN_ARGS} ]; then
         --attention-dropout 0.0 \
         --hidden-dropout 0.0 \
         --no-check-for-nan-in-loss-and-grad \
+        --no-create-attention-mask-in-dataloader \
     "
 fi
 
