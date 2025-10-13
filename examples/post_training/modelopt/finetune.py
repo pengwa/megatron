@@ -33,6 +33,8 @@ from megatron.training.utils import (
     get_blend_and_blend_per_split,
     get_blend_and_blend_per_split,
     is_first_or_last_pipeline_stage,
+    get_batch_on_this_cp_rank,
+    get_batch_on_this_tp_rank,
 )
 from megatron.core.datasets.blended_megatron_dataset_builder import BlendedMegatronDatasetBuilder
 from megatron.training.datasets.sft_dataset import SFTDataset as ESFTDataset
@@ -448,13 +450,10 @@ def train_valid_test_sft_datasets_provider(train_val_test_num_samples, vp_stage=
     # return train_ds, valid_ds, test_ds
 
 
-def get_batch(data_iterator):
-    """Generate a batch.
-    
-    For OfflineDataset, the aux_hidden_states and final hidden_states from the
-    base model are loaded for offline speculative model training."""
+def get_batch(data_iterator, vp_stage=None):
+    """Generate a batch."""
     # TODO: this is pretty hacky, find a better way
-    if (not mpu.is_pipeline_first_stage()) and (not mpu.is_pipeline_last_stage()):
+    if not is_first_or_last_pipeline_stage(vp_stage):
         batch = {
             "tokens": None,
             "labels": None,
@@ -464,64 +463,90 @@ def get_batch(data_iterator):
         }
 
         return batch
-        #return None, None, None, None, None
 
-    args = get_args()
-
-    # Broadcast data since only TP rank-0 has the data_iterator.
-    if data_iterator is not None:
-        data = next(data_iterator)
-    else:
-        data = None
-    if not args.export_offline_model:
-        keys = ["input_ids", "loss_mask"]
-        datatype = torch.int64
-        data_b = tensor_parallel.broadcast_data(keys, data, datatype)
-    else:
-        keys = ["input_ids"]
-        datatype = torch.int64
-        data_b = tensor_parallel.broadcast_data(keys, data, datatype)
-        data_b["loss_mask"] = torch.ones_like(data_b["input_ids"])
-        data_b["loss_mask"][data_b["loss_mask"]==get_eos_id()] = 0
-        data_b["loss_mask"] = torch.cat([data_b["loss_mask"], torch.zeros(1,1).to(torch.cuda.current_device())], dim=-1)
-
-        keys = ["aux_hidden_states", "hidden_states"]
-        datatype = torch.bfloat16
-        feature_b = tensor_parallel.broadcast_data(keys, data, datatype)
-
-
-    # Unpack the data received.
-    tokens_ = data_b["input_ids"]
-    tokens = tokens_[:, 0 : 0 + args.seq_length].contiguous()
-    labels = tokens_[:, 1 : 1 + args.seq_length].contiguous()
-    answer_only_loss_mask = data_b["loss_mask"][:, 1 : 1 + args.seq_length].contiguous()
-
-    # Get the masks and postition ids.
-    attention_mask, loss_mask, position_ids = get_ltor_masks_and_position_ids(
-        tokens, get_eos_id(), get_eos_id(), args.reset_position_ids, args.reset_attention_mask, args.eod_mask_loss, False
-    )
-    loss_mask = loss_mask * answer_only_loss_mask.to(dtype=loss_mask.dtype)
-
-
-    labels = labels.contiguous()
-    loss_mask = loss_mask.contiguous()
-
-    batch = {
-        "tokens": tokens,
-        "labels": labels,
-        "loss_mask": loss_mask,
-        "attention_mask": attention_mask,
-        "position_ids": position_ids,
-    }
-
-    if args.export_offline_model:
-        batch["aux_hidden_states"] = feature_b["aux_hidden_states"].transpose(0, 1)[:args.seq_length]
-        batch["hidden_states"] = feature_b["hidden_states"].transpose(0, 1)[:args.seq_length]
+    # get batches based on the TP rank you are on
+    batch = get_batch_on_this_tp_rank(data_iterator)
 
     # slice batch along sequence dimension for context parallelism
     batch = get_batch_on_this_cp_rank(batch)
 
-    return batch
+    return batch.values()
+
+
+# def get_batch(data_iterator):
+#     """Generate a batch.
+    
+#     For OfflineDataset, the aux_hidden_states and final hidden_states from the
+#     base model are loaded for offline speculative model training."""
+#     # TODO: this is pretty hacky, find a better way
+#     if (not mpu.is_pipeline_first_stage()) and (not mpu.is_pipeline_last_stage()):
+#         batch = {
+#             "tokens": None,
+#             "labels": None,
+#             "loss_mask": None,
+#             "attention_mask": None,
+#             "position_ids": None,
+#         }
+
+#         return batch
+#         #return None, None, None, None, None
+
+#     args = get_args()
+
+#     # Broadcast data since only TP rank-0 has the data_iterator.
+#     if data_iterator is not None:
+#         data = next(data_iterator)
+#     else:
+#         data = None
+#     if not args.export_offline_model:
+#         keys = ["input_ids", "loss_mask"]
+#         datatype = torch.int64
+#         data_b = tensor_parallel.broadcast_data(keys, data, datatype)
+#     else:
+#         keys = ["input_ids"]
+#         datatype = torch.int64
+#         data_b = tensor_parallel.broadcast_data(keys, data, datatype)
+#         data_b["loss_mask"] = torch.ones_like(data_b["input_ids"])
+#         data_b["loss_mask"][data_b["loss_mask"]==get_eos_id()] = 0
+#         data_b["loss_mask"] = torch.cat([data_b["loss_mask"], torch.zeros(1,1).to(torch.cuda.current_device())], dim=-1)
+
+#         keys = ["aux_hidden_states", "hidden_states"]
+#         datatype = torch.bfloat16
+#         feature_b = tensor_parallel.broadcast_data(keys, data, datatype)
+
+
+#     # Unpack the data received.
+#     tokens_ = data_b["input_ids"]
+#     tokens = tokens_[:, 0 : 0 + args.seq_length].contiguous()
+#     labels = tokens_[:, 1 : 1 + args.seq_length].contiguous()
+#     answer_only_loss_mask = data_b["loss_mask"][:, 1 : 1 + args.seq_length].contiguous()
+
+#     # Get the masks and postition ids.
+#     attention_mask, loss_mask, position_ids = get_ltor_masks_and_position_ids(
+#         tokens, get_eos_id(), get_eos_id(), args.reset_position_ids, args.reset_attention_mask, args.eod_mask_loss, False
+#     )
+#     loss_mask = loss_mask * answer_only_loss_mask.to(dtype=loss_mask.dtype)
+
+
+#     labels = labels.contiguous()
+#     loss_mask = loss_mask.contiguous()
+
+#     batch = {
+#         "tokens": tokens,
+#         "labels": labels,
+#         "loss_mask": loss_mask,
+#         "attention_mask": attention_mask,
+#         "position_ids": position_ids,
+#     }
+
+#     if args.export_offline_model:
+#         batch["aux_hidden_states"] = feature_b["aux_hidden_states"].transpose(0, 1)[:args.seq_length]
+#         batch["hidden_states"] = feature_b["hidden_states"].transpose(0, 1)[:args.seq_length]
+
+#     # slice batch along sequence dimension for context parallelism
+#     batch = get_batch_on_this_cp_rank(batch)
+
+#     return batch
 
 
 def _mask_loss(output_tensor, loss_mask, mp_reduce=False):
