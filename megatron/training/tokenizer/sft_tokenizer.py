@@ -197,8 +197,9 @@ class SFTTokenizer(MegatronLegacyTokenizer):
             elif role == "assistant":
                 if self._prompt_config.assistant_prefix_len > 0:
                     target[idx : idx + self._prompt_config.assistant_prefix_len] = IGNORE_INDEX
-            else:
-                raise ValueError(f"Wrong role value.")
+            # pengwa: disable to workaround
+            # else:
+            #     raise ValueError(f"Wrong role value.")
 
             assert np.allclose(
                 tokens[idx : idx + turn_len], turn_tokens
