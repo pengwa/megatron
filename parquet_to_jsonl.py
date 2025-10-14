@@ -5,10 +5,7 @@ pip install datasets pyarrow
 Examples:
 
 # Local files (train & test)
-python parquet_to_jsonl.py \
-  --parquet train:~/datasets/sft_data/train.parquet test:~/datasets/sft_data/test.parquet \
-  --text-column messages \
-  --out-dir ~/datasets/megatron_sft_data
+python parquet_to_jsonl.py --parquet train:~/datasets/sft_data/train.parquet test:~/datasets/sft_data/test.parquet --text-column messages --out-dir ~/datasets/megatron_sft_data
 
 # Single parquet (treated as train)
 python parquet_to_jsonl.py \
@@ -81,7 +78,8 @@ def main():
 
     for split in ds:
         out_jsonl = os.path.join(args.out_dir, f"{split}.jsonl")
-        write_split(ds[split].shuffle(seed=1), out_jsonl, args.text_column, args.keep_newlines)
+        write_split(ds[split], out_jsonl, args.text_column, args.keep_newlines)
+        # write_split(ds[split].shuffle(seed=1), out_jsonl, args.text_column, args.keep_newlines)
 
 if __name__ == "__main__":
     main()
