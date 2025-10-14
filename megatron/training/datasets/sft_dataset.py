@@ -268,7 +268,8 @@ class MultiTurnSFTDataset(MegatronDataset):
 
         # MultiTurn specific configs
         pad_mode: str = "right"
-        truncation: str = "error"
+        truncation: str = "left"
+        # truncation: str = "error"
         max_length: int = self.config.sequence_length
         max_prompt_length: int = 512
         max_response_length: int = 512

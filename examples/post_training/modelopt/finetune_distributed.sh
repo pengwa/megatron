@@ -34,9 +34,9 @@ if [ -z ${MLM_DATA_ARGS} ]; then
         --train-samples 16632 \
         --lr-decay-samples 32 \
         --lr-warmup-samples 0 \
-        --train-data-path $INPUT_DATASET/train.jsonl \
-        --valid-data-path $INPUT_DATASET/test.jsonl \
-        --test-data-path $INPUT_DATASET/test.jsonl \
+        --train-data-path $INPUT_DATASET/train.parquet \
+        --valid-data-path $INPUT_DATASET/test.parquet \
+        --test-data-path $INPUT_DATASET/test.parquet \
     "
 fi
 #         --split 100,0,0 \
