@@ -32,6 +32,8 @@ fi
 if [ -z ${MLM_DATA_ARGS} ]; then
     MLM_DATA_ARGS=" \
         --train-samples 16632 \
+        --lr 2e-5 \
+        --min-lr 0 \
         --lr-warmup-iters 200 \
         --lr-decay-style cosine \
         --lr-decay-iters 20000 \
@@ -61,8 +63,6 @@ fi
 
 if [ -z ${MLM_OPTIM_ARGS} ]; then
     MLM_OPTIM_ARGS=" \
-        --lr 2e-5 \
-        --min-lr 0 \
         --clip-grad 1.0 \
         --weight-decay 0.01 \
         --adam-beta1 0.9 \
