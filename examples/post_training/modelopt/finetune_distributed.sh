@@ -6,6 +6,16 @@ SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 
 INPUT_DATASET=$2
 OUTPUT_DATASET=$3
+MICRO_BSZ=$4
+GLOBAL_BSZ=$5
+
+EPOCHS_NUM=4
+
+# Calcaulte the number of training samples based on the number of epochs and dataset size
+TRAINING_SAMPLES=$((4158 * EPOCHS_NUM))
+printf "Training samples: ${TRAINING_SAMPLES}\n"
+
+
 
 # Common arguments and base model specific arguments
 source "${SCRIPT_DIR}/conf/arguments.sh"
@@ -31,7 +41,7 @@ fi
 # 4158 *4 = 16632
 if [ -z ${MLM_DATA_ARGS} ]; then
     MLM_DATA_ARGS=" \
-        --train-samples 16632 \
+        --train-samples ${TRAINING_SAMPLES} \
         --lr 2e-5 \
         --min-lr 0 \
         --lr-decay-style cosine \
@@ -47,8 +57,8 @@ if [ -z ${MLM_TRAIN_ARGS} ]; then
     MLM_TRAIN_ARGS=" \
         --no-gradient-accumulation-fusion \
         --eod-mask-loss \
-        --global-batch-size 64 \
-        --micro-batch-size 1 \
+        --global-batch-size ${GLOBAL_BSZ} \
+        --micro-batch-size ${MICRO_BSZ} \
         --attention-dropout 0.0 \
         --hidden-dropout 0.0 \
         --no-check-for-nan-in-loss-and-grad \
