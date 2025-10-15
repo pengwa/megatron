@@ -32,8 +32,8 @@ fi
 if [ -z ${MLM_DATA_ARGS} ]; then
     MLM_DATA_ARGS=" \
         --train-samples 16632 \
-        --lr-decay-samples 32 \
-        --lr-warmup-samples 0 \
+        --lr-decay-samples 25600000 \
+        --lr-warmup-fraction 0.1 \
         --train-data-path $INPUT_DATASET/train.parquet \
         --valid-data-path $INPUT_DATASET/test.parquet \
         --test-data-path $INPUT_DATASET/test.parquet \
@@ -50,7 +50,6 @@ if [ -z ${MLM_TRAIN_ARGS} ]; then
         --attention-dropout 0.0 \
         --hidden-dropout 0.0 \
         --no-check-for-nan-in-loss-and-grad \
-        --no-create-attention-mask-in-dataloader \
     "
 fi
 
@@ -60,11 +59,11 @@ fi
 
 if [ -z ${MLM_OPTIM_ARGS} ]; then
     MLM_OPTIM_ARGS=" \
-        --lr 5.0e-5 \
+        --lr 1e-05 \
         --min-lr 1.0e-7 \
         --lr-decay-style cosine \
         --clip-grad 1.0 \
-        --weight-decay 0.0 \
+        --weight-decay 0.01 \
         --adam-beta1 0.9 \
         --adam-beta2 0.95 \
         --init-method-std 0.010 \

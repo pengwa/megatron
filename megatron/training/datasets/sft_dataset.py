@@ -591,22 +591,22 @@ class MultiTurnSFTDataset(MegatronDataset):
             if sequence_length < self.max_length:
                 # Pad sequences
                 pad_token_id = tokenizer.pad_token_id if tokenizer.pad_token_id is not None else 0
-                padded_input_ids = torch.full((self.max_length - sequence_length,), pad_token_id, dtype=input_ids.dtype)
-                padded_attention_mask = torch.zeros((self.max_length - sequence_length,), dtype=attention_mask.dtype)
-                padded_loss_mask = torch.zeros((self.max_length - sequence_length,), dtype=loss_mask.dtype)
+                padded_input_ids = torch.full((self.max_length - sequence_length + 1,), pad_token_id, dtype=input_ids.dtype)
+                padded_attention_mask = torch.zeros((self.max_length - sequence_length + 1,), dtype=attention_mask.dtype)
+                padded_loss_mask = torch.zeros((self.max_length - sequence_length + 1,), dtype=loss_mask.dtype)
                 
                 input_ids = torch.cat((input_ids, padded_input_ids))
                 attention_mask = torch.cat((attention_mask, padded_attention_mask))
                 loss_mask = torch.cat((loss_mask, padded_loss_mask))
             elif sequence_length > self.max_length:
                 if self.truncation == "left":
-                    input_ids = input_ids[-self.max_length:]
-                    attention_mask = attention_mask[-self.max_length:]
-                    loss_mask = loss_mask[-self.max_length:]
+                    input_ids = input_ids[-self.max_length - 1:]
+                    attention_mask = attention_mask[-self.max_length - 1:]
+                    loss_mask = loss_mask[-self.max_length - 1:]
                 elif self.truncation == "right":
-                    input_ids = input_ids[:self.max_length]
-                    attention_mask = attention_mask[:self.max_length]
-                    loss_mask = loss_mask[:self.max_length]
+                    input_ids = input_ids[:self.max_length + 1]
+                    attention_mask = attention_mask[:self.max_length + 1]
+                    loss_mask = loss_mask[:self.max_length + 1]
                 elif self.truncation == "error":
                     raise ValueError(f"{sequence_length=} is larger than {self.max_length=}")
                 else:
@@ -624,24 +624,22 @@ class MultiTurnSFTDataset(MegatronDataset):
             #     "loss_mask": loss_mask,
             # }
             
-            # shift to the tokens by 1 
-            tokens = input_ids[:-1].contiguous()
-            labels = input_ids[1:].contiguous()
+
 
             if self.config.create_attention_mask:
                 ret = {
-                    'tokens': tokens,
-                    'labels': labels,
-                    'attention_mask': attention_mask,
-                    'loss_mask': loss_mask,
-                    'position_ids': position_ids,
+                    'tokens': input_ids[:-1].contiguous(),
+                    'labels': labels[1:].contiguous(),
+                    'attention_mask': attention_mask[:-1].contiguous(),
+                    'loss_mask': loss_mask[:-1].contiguous(),
+                    'position_ids': position_ids[:-1].contiguous(),
                 }
             else:
                 ret = {
-                    'tokens': tokens,
-                    'labels': input_ids,
-                    'loss_mask': loss_mask,
-                    'position_ids': position_ids,
+                    'tokens': input_ids[:-1].contiguous(),
+                    'labels': labels[1:].contiguous(),
+                    'loss_mask': loss_mask[:-1].contiguous(),
+                    'position_ids': position_ids[:-1].contiguous(),
                 }
 
             return ret
