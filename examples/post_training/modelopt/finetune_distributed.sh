@@ -34,9 +34,7 @@ if [ -z ${MLM_DATA_ARGS} ]; then
         --train-samples 16632 \
         --lr 2e-5 \
         --min-lr 0 \
-        --lr-warmup-iters 200 \
         --lr-decay-style cosine \
-        --lr-decay-iters 20000 \
         --train-data-path $INPUT_DATASET/train.parquet \
         --valid-data-path $INPUT_DATASET/test.parquet \
         --test-data-path $INPUT_DATASET/test.parquet \
