@@ -617,19 +617,10 @@ class MultiTurnSFTDataset(MegatronDataset):
             # Zero out position IDs for padding
             position_ids = position_ids * attention_mask
 
-            # return {
-            #     "input_ids": input_ids,
-            #     "attention_mask": attention_mask,
-            #     "position_ids": position_ids,
-            #     "loss_mask": loss_mask,
-            # }
-            
-
-
             if self.config.create_attention_mask:
                 ret = {
                     'tokens': input_ids[:-1].contiguous(),
-                    'labels': labels[1:].contiguous(),
+                    'labels': input_ids[1:].contiguous(),
                     'attention_mask': attention_mask[:-1].contiguous(),
                     'loss_mask': loss_mask[:-1].contiguous(),
                     'position_ids': position_ids[:-1].contiguous(),
@@ -637,7 +628,7 @@ class MultiTurnSFTDataset(MegatronDataset):
             else:
                 ret = {
                     'tokens': input_ids[:-1].contiguous(),
-                    'labels': labels[1:].contiguous(),
+                    'labels': input_ids[1:].contiguous(),
                     'loss_mask': loss_mask[:-1].contiguous(),
                     'position_ids': position_ids[:-1].contiguous(),
                 }
